@@ -1,3 +1,4 @@
+using BackgammonChat.Handlers;
 using BackgammonChat.Hubs;
 using ChatService.Persistence;
 using Microsoft.AspNetCore.Builder;
@@ -8,9 +9,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using MediatR;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
+
 
 namespace BackgammonChat
 {
@@ -40,7 +44,7 @@ namespace BackgammonChat
                       .AllowCredentials();
                 });
             });
-
+            services.AddMediatR(typeof(List.Handler).Assembly);
             services.AddSingleton<IDictionary<string, UserConnection>>(opts => new Dictionary<string, UserConnection>());
         }
 
@@ -59,6 +63,7 @@ namespace BackgammonChat
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapControllers();
                 endpoints.MapHub<ChatHub>("/chat");
             });
         }

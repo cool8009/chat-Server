@@ -20,6 +20,7 @@ namespace ChatService.Controllers
 
         [HttpGet]
         public async Task<ActionResult<List<Message>>> GetMessages() =>
+            
             await Mediator.Send(new List.Query());
 
     }
