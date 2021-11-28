@@ -28,20 +28,20 @@ namespace BackgammonChat.Hubs
             if (_connections.TryGetValue(Context.ConnectionId, out UserConnection userConnection))
             {
                 _connections.Remove(Context.ConnectionId);
-                Clients.Group(userConnection.Room)
+                Clients.Group(userConnection.ChatConnection)
                     .SendAsync("ReceiveMessage", _botUser, $"{userConnection.User} has left");
-                SendConnectedUsers(userConnection.Room);
+                SendConnectedUsers(userConnection.ChatConnection);
             }
             return base.OnDisconnectedAsync(exception);
         }
 
 
-        //get details about user, the message context,room and send
+        //get details about user, the message context, send
         public async Task SendMessage  (string message)
         {
             if (_connections.TryGetValue(Context.ConnectionId, out UserConnection userConnection))
             {
-                await Clients.Group(userConnection.Room)
+                await Clients.Group(userConnection.ChatConnection)
                  .SendAsync("ReceiveMessage", userConnection.User, message);
                 EntityEntry<Message> entityEntry = await _context.Messages.AddAsync(new Message { DateSent = DateTime.Now, Content = message, Id = new Guid() });
                 var checker = _context.SaveChanges();
@@ -49,30 +49,30 @@ namespace BackgammonChat.Hubs
         }
 
 
-        //get details about user connection, the  room, enter the room
-        public async Task JoinRoom(UserConnection userConnection)
+        //get details about user connection, enter the chat
+        public async Task JoinChat(UserConnection userConnection)
         {
             
-            //to notify connection to the room
-            await Groups.AddToGroupAsync(Context.ConnectionId, userConnection.Room);
+            //to notify connection to the chat
+            await Groups.AddToGroupAsync(Context.ConnectionId, userConnection.ChatConnection);
 
             _connections[Context.ConnectionId] = userConnection;
 
             
-            await Clients.Group(userConnection.Room).SendAsync("ReceiveMessage", _botUser,
-                $"{userConnection.User} joined {userConnection.Room}");
+            await Clients.Group(userConnection.ChatConnection).SendAsync("ReceiveMessage", _botUser,
+                $"{userConnection.User} joined {userConnection.ChatConnection}");
 
-            await SendConnectedUsers(userConnection.Room);
+            await SendConnectedUsers(userConnection.ChatConnection);
         }
 
-        //get all connected users by room
-        public Task SendConnectedUsers(string room)
+        //get all connected users by chat
+        public Task SendConnectedUsers(string chat)
         {
             var users = _connections.Values
-                .Where(c => c.Room == room)
+                .Where(c => c.ChatConnection == chat)
                 .Select(c => c.User);
 
-            return Clients.Group(room).SendAsync("UsersInRoom", users);
+            return Clients.Group(chat).SendAsync("UsersInChat", users);
         }
 
         //private List<Message> GetMessagesAsync()
